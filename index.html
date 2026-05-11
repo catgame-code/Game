@@ -62,7 +62,7 @@ TIME:<span id="time">0</span><br>
 TOTAL:<span id="total">0</span><br>
 RED:<span id="red">0</span><br>
 BLUE:<span id="blue">0</span><br>
-YELLOW:<span id="yellow">0</span>
+YELLOW:<span id="yellow">0</span><br>
  COMBO:<span id="combo">0</span><br>
 </div>
 
@@ -333,12 +333,6 @@ function playerRadiusCheck(){
    DRAW
 ====================== */
 function draw(){
-//コンボ当たり判定　薄い緑の描写
-ctx.strokeStyle = "rgba(0,255,0,0.25)";
-ctx.lineWidth = 2;
-ctx.beginPath();
-ctx.arc(player.x, player.y, comboRadius, 0, Math.PI*2);
-ctx.stroke();
   
  ctx.save();
 
@@ -347,6 +341,13 @@ ctx.stroke();
  ctx.translate(sx,sy);
 
  ctx.clearRect(0,0,c.width,c.height);
+
+  //コンボ当たり判定　薄い緑の描写
+ctx.strokeStyle = "rgba(0,255,0,0.25)";
+ctx.lineWidth = 2;
+ctx.beginPath();
+ctx.arc(player.x, player.y, comboRadius, 0, Math.PI*2);
+ctx.stroke();
 
  if(state!=="menu"){
 
