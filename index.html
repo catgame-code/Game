@@ -63,7 +63,8 @@ TOTAL:<span id="total">0</span><br>
 RED:<span id="red">0</span><br>
 BLUE:<span id="blue">0</span><br>
 YELLOW:<span id="yellow">0</span><br>
- COMBO:<span id="combo">0</span><br>
+COMBO:<span id="combo">0</span><br>
+DODGE x<span id="dodgeMul">1</span>
 </div>
 
 <canvas id="c"></canvas>
@@ -224,14 +225,14 @@ function hit(){
  slowTimer=0.4;
 
  explode(player.x,player.y);
+    //ゲージリセット
+  dodgeGauge = 0;
+dodgeTimer = 0;
+dodgeMultiplier = 1;
 
  setTimeout(()=>{
    gameOver();
  },300)
-  //ゲージリセット
-  dodgeGauge = 0;
-dodgeTimer = 0;
-dodgeMultiplier = 1;
 }
 
 /* ======================
@@ -313,28 +314,25 @@ if(warnTimer >= warnMax){
  });
 
   //ドッジゲージ処理
-  let grazed = false;
+ let grazed = false;
 
 balls.forEach(b=>{
   let dx = b.x - player.x;
   let dy = b.y - player.y;
   let dist = Math.sqrt(dx*dx + dy*dy);
 
-  // 緑リングに入ったらカウント
   if(dist < comboRadius + b.r && dist > playerRadiusCheck()){
     grazed = true;
   }
 });
 
 if(grazed){
-  dodgeGauge += dt * 10; // ←時間で増える
+  dodgeGauge += dt * 10; // 触れている間増える
   dodgeTimer = dodgeMaxTime;
-}
 }else{
   dodgeTimer -= dt;
 
   if(dodgeTimer <= 0 && dodgeGauge > 0){
-    // 💰 精算
     score += dodgeGauge * 10 * multiplier * dodgeMultiplier;
     dodgeGauge = 0;
   }
@@ -436,6 +434,16 @@ ctx.stroke();
    ctx.fillStyle="rgba(255,0,0,0.3)";
    ctx.fillRect(0,0,c.width,c.height);
  }
+  //ドッジゲージ倍率表示
+  ctx.fillStyle = "rgba(0,255,0,0.8)";
+ctx.font = "bold 28px sans-serif";
+ctx.textAlign = "center";
+
+ctx.fillText(
+  "DODGE x" + dodgeMultiplier,
+  c.width / 2,
+  c.height - 40
+);
 
  /* UI */
  let r=0,b=0,y=0;
@@ -445,13 +453,14 @@ ctx.stroke();
    if(v.type==="yellow") y++;
  });
   
-document.getElementById("combo").textContent=combo;
+//document.getElementById("combo").textContent=combo;
  document.getElementById("score").textContent=Math.floor(score);
  document.getElementById("time").textContent=time.toFixed(1);
  document.getElementById("total").textContent=balls.length;
  document.getElementById("red").textContent=r;
  document.getElementById("blue").textContent=b;
  document.getElementById("yellow").textContent=y;
+ document.getElementById("dodgeMul").textContent = dodgeMultiplier;
 }
 
 /* ======================
