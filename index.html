@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>回避ゲーム FINAL ULTIMATE</title>
+
+<style>
+body{
+  margin:0;
+  overflow:hidden;
+  background:#111;
+  font-family:sans-serif;
+  color:white;
+}
+canvas{display:block;}
+
+#ui{
+  position:fixed;
+  top:10px;
+  left:10px;
+  font-size:14px;
+  line-height:1.4;
+  z-index:10;
+}
+
+.overlay{
+  position:fixed;
+  width:100%;
+  height:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  background:#111;
+  z-index:50;
+}
+
+button{
+  font-size:18px;
+  padding:10px 16px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="menu" class="overlay">
+  <h1>回避ゲーム</h1>
+  <button onclick="start()">START</button>
+</div>
+
+<div id="gameover" class="overlay" style="display:none;">
+  <h1 style="color:red;">GAME OVER</h1>
+  <div id="result"></div>
+  <button onclick="start()">RETRY</button>
+</div>
+
+<div id="ui">
+SCORE:<span id="score">0</span><br>
+TIME:<span id="time">0</span><br>
+TOTAL:<span id="total">0</span><br>
+RED:<span id="red">0</span><br>
+BLUE:<span id="blue">0</span><br>
+YELLOW:<span id="yellow">0</span>
+</div>
+
+<canvas id="c"></canvas>
+
+<script>
+const c=document.getElementById("c");
+const ctx=c.getContext("2d");
+
+function resize(){
+  c.width=innerWidth;
+  c.height=innerHeight;
+}
+resize();
+
+/* ======================
+   状態
+====================== */
+let state="menu";
+
+let player={x:0,y:0};
+let balls=[];
+let particles=[];
+
+let score=0;
+let time=0;
+
+let lastTime=0;
+
+/* ======================
+   管理
+====================== */
+let redTimer=0;
+let redTotal=0;
+let blueTotal=0;
+let yellowTotal=0;
+
+/* ======================
+   スロー・演出
+====================== */
+let slow=1;
+let slowTimer=0;
+let hitFlash=0;
+let shake=0;
+
+/* ======================
+   スピード固定
+====================== */
+const SPEED={
+  red:2,
+  blue:2.6,
+  yellow:3.2
+};
+
+/* ======================
+   spawn（中央）
+====================== */
+function spawn(type){
+ const ang=Math.random()*Math.PI*2;
+
+ balls.push({
+   x:c.width/2,
+   y:c.height/2,
+   vx:Math.cos(ang)*SPEED[type],
+   vy:Math.sin(ang)*SPEED[type],
+   r:4,
+   type
+ });
+}
+
+/* ======================
+   爆発
+====================== */
+function explode(x,y){
+ for(let i=0;i<20;i++){
+   let ang=Math.random()*Math.PI*2;
+   let sp=Math.random()*3+1;
+
+   particles.push({
+     x,
+     y,
+     vx:Math.cos(ang)*sp,
+     vy:Math.sin(ang)*sp,
+     life:1
+   });
+ }
+}
+
+/* ======================
+   初期化
+====================== */
+function init(){
+ balls=[];
+ particles=[];
+ score=0;
+ time=0;
+
+ redTimer=0;
+ redTotal=0;
+ blueTotal=0;
+ yellowTotal=0;
+
+ slow=1;
+ slowTimer=0;
+ hitFlash=0;
+ shake=0;
+
+ spawn("red");
+ redTotal=1;
+}
+
+/* ======================
+   START
+====================== */
+function start(){
+ document.getElementById("menu").style.display="none";
+ document.getElementById("gameover").style.display="none";
+ state="play";
+ init();
+}
+
+/* ======================
+   HIT
+====================== */
+function hit(){
+ if(state!=="play") return;
+
+ state="hit";
+
+ hitFlash=1;
+ shake=10;
+
+ slow=0.15;
+ slowTimer=0.4;
+
+ explode(player.x,player.y);
+
+ setTimeout(()=>{
+   gameOver();
+ },300);
+}
+
+/* ======================
+   GAME OVER
+====================== */
+function gameOver(){
+ state="gameover";
+
+ document.getElementById("gameover").style.display="flex";
+
+ document.getElementById("result").innerHTML=
+   "スコア: "+Math.floor(score)+"<br>"+
+   "タイム: "+time.toFixed(1)+"<br>"+
+   "ボール数: "+balls.length;
+}
+
+/* ======================
+   UPDATE
+====================== */
+function update(dt){
+
+ if(state!=="play" && state!=="hit") return;
+
+ time += dt;
+ score += dt*10;
+
+ /* スロー解除 */
+ if(slowTimer>0){
+   slowTimer -= dt;
+   if(slowTimer<=0) slow=1;
+ }
+
+ /* 赤生成 */
+ redTimer += dt;
+ if(redTimer>=1){
+   spawn("red");
+   redTotal++;
+   redTimer-=1;
+ }
+
+ /* 青 */
+ if(redTotal >= (blueTotal+1)*10){
+   spawn("blue");
+   blueTotal++;
+ }
+
+ /* 黄 */
+ if(blueTotal >= (yellowTotal+1)*5){
+   spawn("yellow");
+   yellowTotal++;
+ }
+
+ /* ボール */
+ balls.forEach(b=>{
+   b.x+=b.vx;
+   b.y+=b.vy;
+
+   if(b.x-b.r<0){b.x=b.r;b.vx*=-1;}
+   if(b.x+b.r>c.width){b.x=c.width-b.r;b.vx*=-1;}
+   if(b.y-b.r<0){b.y=b.r;b.vy*=-1;}
+   if(b.y+b.r>c.height){b.y=c.height-b.r;b.vy*=-1;}
+
+   let dx=b.x-player.x;
+   let dy=b.y-player.y;
+   let d=Math.sqrt(dx*dx+dy*dy);
+
+   if(d<10) hit();
+ });
+
+ /* 爆発粒子 */
+ particles.forEach(p=>{
+   p.x+=p.vx;
+   p.y+=p.vy;
+   p.vx*=0.96;
+   p.vy*=0.96;
+   p.life-=0.02;
+ });
+
+ particles=particles.filter(p=>p.life>0);
+
+ /* プレイヤー（タッチ移動） */
+ player.x += (targetX-player.x)*0.2;
+ player.y += (targetY-player.y)*0.2;
+
+ player.x=Math.max(8,Math.min(c.width-8,player.x));
+ player.y=Math.max(8,Math.min(c.height-8,player.y));
+
+ if(hitFlash>0) hitFlash-=0.05;
+ if(shake>0) shake*=0.9;
+}
+
+/* ======================
+   DRAW
+====================== */
+function draw(){
+
+ ctx.save();
+
+ let sx=(Math.random()-0.5)*shake;
+ let sy=(Math.random()-0.5)*shake;
+ ctx.translate(sx,sy);
+
+ ctx.clearRect(0,0,c.width,c.height);
+
+ if(state!=="menu"){
+
+   ctx.fillStyle="lime";
+   ctx.beginPath();
+   ctx.arc(player.x,player.y,8,0,Math.PI*2);
+   ctx.fill();
+
+   balls.forEach(b=>{
+     ctx.beginPath();
+     ctx.fillStyle=
+       b.type==="red"?"red":
+       b.type==="blue"?"deepskyblue":"yellow";
+
+     ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+     ctx.fill();
+   });
+
+   particles.forEach(p=>{
+     ctx.fillStyle="rgba(255,200,0,"+p.life+")";
+     ctx.fillRect(p.x,p.y,3,3);
+   });
+ }
+
+ ctx.restore();
+
+ if(hitFlash>0){
+   ctx.fillStyle="rgba(255,0,0,0.3)";
+   ctx.fillRect(0,0,c.width,c.height);
+ }
+
+ /* UI */
+ let r=0,b=0,y=0;
+ balls.forEach(v=>{
+   if(v.type==="red") r++;
+   if(v.type==="blue") b++;
+   if(v.type==="yellow") y++;
+ });
+
+ document.getElementById("score").textContent=Math.floor(score);
+ document.getElementById("time").textContent=time.toFixed(1);
+ document.getElementById("total").textContent=balls.length;
+ document.getElementById("red").textContent=r;
+ document.getElementById("blue").textContent=b;
+ document.getElementById("yellow").textContent=y;
+}
+
+/* ======================
+   タッチ操作（移動）
+====================== */
+let targetX=0;
+let targetY=0;
+
+c.addEventListener("touchstart",e=>{
+ let t=e.touches[0];
+ targetX=t.clientX;
+ targetY=t.clientY;
+ player.x=targetX;
+ player.y=targetY;
+});
+
+c.addEventListener("touchmove",e=>{
+ let t=e.touches[0];
+ targetX=t.clientX;
+ targetY=t.clientY;
+});
+
+/* ======================
+   LOOP
+====================== */
+function loop(t){
+ if(!lastTime) lastTime=t;
+ let dt=(t-lastTime)/1000;
+ lastTime=t;
+
+ dt *= slow;
+
+ update(dt);
+ draw();
+
+ requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+window.addEventListener("resize",resize);
+</script>
+
+</body>
+</html>
