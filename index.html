@@ -106,6 +106,9 @@ let redTotal=0;
 let blueTotal=0;
 let yellowTotal=0;
 let multiplier = 1;
+  //出現カウント
+  let warnTimer = 0;
+const warnMax = 1; // 1秒で出現
 
 /* ======================
    スロー・演出
@@ -166,9 +169,6 @@ function init(){
  particles=[];
  score=0;
  time=0;
-  
-player.x = c.width / 2;
-player.y = c.height * 0.75;
 
  redTimer=0;
  redTotal=0;
@@ -180,11 +180,18 @@ player.y = c.height * 0.75;
  hitFlash=0;
  shake=0;
 
-  combo = 0;
-multiplier = 1;
+ combo = 0;
+ multiplier = 1;
 
  spawn("red");
  redTotal=1;
+
+ // ★ここを最後にする（重要）
+ player.x = c.width / 2;
+ player.y = c.height * 0.75;
+
+ targetX = player.x;
+ targetY = player.y;
 }
 
 /* ======================
@@ -249,6 +256,17 @@ function update(dt){
  }
 
  /* 赤生成 */
+  warnTimer += dt;
+
+let t = warnTimer / warnMax; // 0→1
+
+// 1秒経過で出現
+if(warnTimer >= warnMax){
+  spawn("red");
+  redTotal++;
+  warnTimer = 0;
+}
+ /*旧版
  redTimer += dt;
  if(redTimer>=1){
    spawn("red");
@@ -356,7 +374,22 @@ function draw(){
  ctx.translate(sx,sy);
 
  ctx.clearRect(0,0,c.width,c.height);
+  //
+  let t = warnTimer / warnMax;
 
+// 小→大にする
+let radius = 5 + 35 * t; // 5→40くらい
+
+ctx.strokeStyle = "rgba(255,0,0,0.25)";
+ctx.lineWidth = 2;
+ctx.beginPath();
+ctx.arc(c.width/2, c.height/2, radius, 0, Math.PI*2);
+ctx.stroke();
+  //敵の出現位置
+ctx.strokeStyle = "rgba(255,0,0,0.4)";
+ctx.beginPath();
+ctx.arc(c.width/2, c.height/2, 40, 0, Math.PI*2);
+ctx.stroke();
   //コンボ当たり判定　薄い緑の描写
 ctx.strokeStyle = "rgba(0,255,0,0.25)";
 ctx.lineWidth = 2;
