@@ -109,6 +109,11 @@ let multiplier = 1;
   //出現カウント
   let warnTimer = 0;
 const warnMax = 1; // 1秒で出現
+  //ゲージ
+  let dodgeGauge = 0;
+let dodgeTimer = 0;
+const dodgeMaxTime = 2; // 何秒離れたら精算するか
+let dodgeMultiplier = 1;
 
 /* ======================
    スロー・演出
@@ -222,7 +227,11 @@ function hit(){
 
  setTimeout(()=>{
    gameOver();
- },300);
+ },300)
+  //ゲージリセット
+  dodgeGauge = 0;
+dodgeTimer = 0;
+dodgeMultiplier = 1;
 }
 
 /* ======================
@@ -303,39 +312,40 @@ if(warnTimer >= warnMax){
    if(d<10) hit();
  });
 
-  //コンボ処理
-  let hitCombo = false;
+  //ドッジゲージ処理
+  let grazed = false;
 
 balls.forEach(b=>{
   let dx = b.x - player.x;
   let dy = b.y - player.y;
   let dist = Math.sqrt(dx*dx + dy*dy);
 
-  // 薄いリングに入ったらコンボ
+  // 緑リングに入ったらカウント
   if(dist < comboRadius + b.r && dist > playerRadiusCheck()){
-    hitCombo = true;
+    grazed = true;
   }
 });
 
-if(hitCombo){
-  combo++;
-  comboTimer = 2; // 2秒猶予
+if(grazed){
+  dodgeGauge += dt * 10; // ←時間で増える
+  dodgeTimer = dodgeMaxTime;
+}
 }else{
-  comboTimer -= dt;
-  if(comboTimer <= 0){
-    combo = 0;
+  dodgeTimer -= dt;
+
+  if(dodgeTimer <= 0 && dodgeGauge > 0){
+    // 💰 精算
+    score += dodgeGauge * 10 * multiplier * dodgeMultiplier;
+    dodgeGauge = 0;
   }
 }
-
-  //コンボ更新
-  if(combo >= 20){
-  multiplier = 5;
-}else if(combo >= 10){
-  multiplier = 3;
-}else if(combo >= 3){
-  multiplier = 2;
+  //ドッジゲージ倍率
+if(dodgeGauge >= 300){
+  dodgeMultiplier = 3;
+}else if(dodgeGauge >= 100){
+  dodgeMultiplier = 2;
 }else{
-  multiplier = 1;
+  dodgeMultiplier = 1;
 }
 
  /* 爆発粒子 */
