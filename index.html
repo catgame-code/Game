@@ -105,6 +105,9 @@ let redTimer=0;
 let redTotal=0;
 let blueTotal=0;
 let yellowTotal=0;
+  let combo = 0;
+let comboTimer = 0;
+let multiplier = 1;
 
 /* ======================
    スロー・演出
@@ -179,6 +182,9 @@ player.y = c.height * 0.75;
  hitFlash=0;
  shake=0;
 
+  combo = 0;
+multiplier = 1;
+
  spawn("red");
  redTotal=1;
 }
@@ -236,7 +242,7 @@ function update(dt){
  if(state!=="play" && state!=="hit") return;
 
  time += dt;
- score += dt*10;
+ score += dt * 10 * multiplier;
 
  /* スロー解除 */
  if(slowTimer>0){
@@ -303,6 +309,17 @@ if(hitCombo){
   if(comboTimer <= 0){
     combo = 0;
   }
+}
+
+  //コンボ更新
+  if(combo >= 20){
+  multiplier = 5;
+}else if(combo >= 10){
+  multiplier = 3;
+}else if(combo >= 3){
+  multiplier = 2;
+}else{
+  multiplier = 1;
 }
 
  /* 爆発粒子 */
