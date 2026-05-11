@@ -63,6 +63,7 @@ TOTAL:<span id="total">0</span><br>
 RED:<span id="red">0</span><br>
 BLUE:<span id="blue">0</span><br>
 YELLOW:<span id="yellow">0</span>
+ COMBO:<span id="combo">0</span><br>
 </div>
 
 <canvas id="c"></canvas>
@@ -75,8 +76,14 @@ function resize(){
   c.width=innerWidth;
   c.height=innerHeight;
 }
+  
 resize();
-
+  /* ======================
+   コンボ
+====================== */
+let combo = 0;
+let comboTimer = 0;
+const comboRadius = 18; // 薄い緑の判定範囲
 /* ======================
    状態
 ====================== */
@@ -274,6 +281,30 @@ function update(dt){
    if(d<10) hit();
  });
 
+  //コンボ処理
+  let hitCombo = false;
+
+balls.forEach(b=>{
+  let dx = b.x - player.x;
+  let dy = b.y - player.y;
+  let dist = Math.sqrt(dx*dx + dy*dy);
+
+  // 薄いリングに入ったらコンボ
+  if(dist < comboRadius + b.r && dist > playerRadiusCheck()){
+    hitCombo = true;
+  }
+});
+
+if(hitCombo){
+  combo++;
+  comboTimer = 2; // 2秒猶予
+}else{
+  comboTimer -= dt;
+  if(comboTimer <= 0){
+    combo = 0;
+  }
+}
+
  /* 爆発粒子 */
  particles.forEach(p=>{
    p.x+=p.vx;
@@ -295,12 +326,20 @@ function update(dt){
  if(hitFlash>0) hitFlash-=0.05;
  if(shake>0) shake*=0.9;
 }
-
+function playerRadiusCheck(){
+  return 10; // プレイヤー判定
+}
 /* ======================
    DRAW
 ====================== */
 function draw(){
-
+//コンボ当たり判定　薄い緑の描写
+ctx.strokeStyle = "rgba(0,255,0,0.25)";
+ctx.lineWidth = 2;
+ctx.beginPath();
+ctx.arc(player.x, player.y, comboRadius, 0, Math.PI*2);
+ctx.stroke();
+  
  ctx.save();
 
  let sx=(Math.random()-0.5)*shake;
@@ -346,7 +385,8 @@ function draw(){
    if(v.type==="blue") b++;
    if(v.type==="yellow") y++;
  });
-
+  
+document.getElementById("combo").textContent=combo;
  document.getElementById("score").textContent=Math.floor(score);
  document.getElementById("time").textContent=time.toFixed(1);
  document.getElementById("total").textContent=balls.length;
