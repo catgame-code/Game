@@ -473,9 +473,18 @@ if(dodgeGauge > 0){
   
 //document.getElementById("combo").textContent=combo;
  document.getElementById("score").textContent=Math.floor(score);
+
 if(dodgeGauge > 0){
-  document.getElementById("dodgeText").textContent =
-    " +" + Math.floor(dodgeGauge) + " x" + dodgeMultiplier;
+
+  let text = " +" + Math.floor(dodgeGauge);
+
+  // x2以上だけ表示
+  if(dodgeMultiplier >= 2){
+    text += " x" + dodgeMultiplier;
+  }
+
+  document.getElementById("dodgeText").textContent = text;
+
 }else{
   document.getElementById("dodgeText").textContent = "";
 }
@@ -484,7 +493,6 @@ if(dodgeGauge > 0){
  document.getElementById("red").textContent=r;
  document.getElementById("blue").textContent=b;
  document.getElementById("yellow").textContent=y;
- document.getElementById("dodgeMul").textContent = dodgeMultiplier;
 }
 
 /* ======================
