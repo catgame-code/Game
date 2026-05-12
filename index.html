@@ -56,16 +56,13 @@ button{
   <button onclick="start()">RETRY</button>
 </div>
 
-<div id="ui">
-SCORE:<span id="score">0</span><br>
+<div id="ui">SCORE:<span id="score">0</span><span id="dodgeText"></span>
 TIME:<span id="time">0</span><br>
 TOTAL:<span id="total">0</span><br>
 RED:<span id="red">0</span><br>
 BLUE:<span id="blue">0</span><br>
 YELLOW:<span id="yellow">0</span><br>
-COMBO:<span id="combo">0</span><br>
-DODGE x<span id="dodgeMul">1</span>
-</div>
+COMBO:<span id="combo">0</span></div>
 
 <canvas id="c"></canvas>
 
@@ -439,11 +436,32 @@ ctx.stroke();
 ctx.font = "bold 28px sans-serif";
 ctx.textAlign = "center";
 
-ctx.fillText(
-  "DODGE x" + dodgeMultiplier,
-  c.width / 2,
-  c.height - 40
-);
+if(dodgeGauge > 0){
+
+  let text = "+" + Math.floor(dodgeGauge);
+
+  if(dodgeMultiplier >= 2){
+    text += " x" + dodgeMultiplier;
+  }
+
+  // 🔥 色変化
+  if(dodgeMultiplier >= 3){
+    ctx.fillStyle = "rgba(255,220,0,0.95)";
+  }else if(dodgeMultiplier >= 2){
+    ctx.fillStyle = "rgba(0,255,255,0.95)";
+  }else{
+    ctx.fillStyle = "rgba(0,255,0,0.9)";
+  }
+
+  ctx.font = "bold 32px sans-serif";
+  ctx.textAlign = "center";
+
+  ctx.fillText(
+    text,
+    c.width / 2,
+    c.height - 40
+  );
+}
 
  /* UI */
  let r=0,b=0,y=0;
@@ -455,6 +473,12 @@ ctx.fillText(
   
 //document.getElementById("combo").textContent=combo;
  document.getElementById("score").textContent=Math.floor(score);
+if(dodgeGauge > 0){
+  document.getElementById("dodgeText").textContent =
+    " +" + Math.floor(dodgeGauge) + " x" + dodgeMultiplier;
+}else{
+  document.getElementById("dodgeText").textContent = "";
+}
  document.getElementById("time").textContent=time.toFixed(1);
  document.getElementById("total").textContent=balls.length;
  document.getElementById("red").textContent=r;
